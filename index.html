@@ -11,6 +11,9 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- ✅ Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -28,22 +31,20 @@
                 <h2 class="text-2xl font-semibold text-gray-700">Acesso ao Sistema Interno</h2>
                 <p class="mt-2 text-gray-500">Exclusivo para membros.</p>
             </div>
-            <form id="login-form" class="mt-8 space-y-6">
-                <div>
-                    <label for="email" class="sr-only">Email</label>
-                    <input id="email" name="email" type="email" autocomplete="email" required class="relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" placeholder="seu-email@infobiojr.com.br">
+                <div class="mt-8 space-y-6">
+                    <!-- ✅ Aqui o botão do Google será renderizado via auth.js -->
+                    <div id="google-login-button" class="flex justify-center"></div>
+
+                    <p class="text-xs text-gray-400 text-center">
+                        Use seu e-mail institucional (@infobiojr.com.br).
+                    </p>
+
+                    <!-- Mantemos a área de erro para o auth.js usar -->
+                    <p id="login-error" class="text-red-500 text-sm hidden text-center">
+                        Seu e-mail não está autorizado a acessar o sistema.
+                    </p>
                 </div>
-                <div>
-                    <label for="password" class="sr-only">Senha</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" required class="relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" placeholder="Senha">
-                </div>
-                <p id="login-error" class="text-red-500 text-sm hidden">Usuário não encontrado ou e-mail inválido.</p>
-                <div>
-                    <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
-                        Entrar
-                    </button>
-                </div>
-            </form>
+
         </div>
     </div>
     
