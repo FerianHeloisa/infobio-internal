@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Membros | InfoBio Jr.</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-gray-100 antialiased">
+
+    <div id="app-container">
+        <div class="flex h-screen bg-gray-100">
+            <aside class="w-64 bg-gray-800 text-white flex-shrink-0 flex flex-col sidebar-scroll">
+                <div class="h-20 flex items-center justify-center px-4 border-b border-gray-700">
+                    <div class="flex items-center text-2xl font-bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500 mr-2"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.76.77-.76-.77a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path><path d="M12 5.5V13.5"></path><path d="M16 9.5H8"></path></svg>
+                        <span>InfoBio Jr.</span>
+                    </div>
+                </div>
+                <nav id="sidebar-nav" class="flex-grow p-4 space-y-2">
+                    <a href="dashboard.html" data-role="all" class="nav-link flex items-center px-4 py-2.5 rounded-lg">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                    </a>
+                     <a href="profile.html" data-role="all" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
+                        <i data-lucide="user" class="w-5 h-5 mr-3"></i> Meu Perfil
+                    </a>
+                    <a href="forms.html" data-role="all" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
+                        <i data-lucide="file-text" class="w-5 h-5 mr-3"></i> Formulários
+                    </a>
+                    <a href="feedback.html" data-role="all" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
+                        <i data-lucide="message-square-warning" class="w-5 h-5 mr-3"></i> Reclame para GG
+                    </a>
+                    <a href="vacation.html" data-role="all" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
+                        <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Solicitar Férias
+                    </a>
+                    <a href="tasks.html" data-role="all" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
+                        <i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tarefas e Projetos
+                    </a>
+                     <a href="attendance.html" data-role="director vp president" class="nav-link hidden flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
+                        <i data-lucide="check-square" class="w-5 h-5 mr-3"></i> Presença
+                    </a>
+                    <a href="members.html" data-role="director vp president" class="nav-link hidden flex items-center px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
+                        <i data-lucide="users-2" class="w-5 h-5 mr-3"></i> Gerenciar Membros
+                    </a>
+                </nav>
+                 <div class="p-4 border-t border-gray-700">
+                    <div class="flex items-center">
+                        <img id="user-avatar-display" class="h-10 w-10 rounded-full object-cover" src="https://placehold.co/100x100/a3e635/1f2937?text=M" alt="Member Avatar">
+                        <div class="ml-3">
+                            <p class="text-sm font-medium" id="user-name-display">Membro Logado</p>
+                            <p class="text-xs text-gray-400" id="user-email-display">membro@infobiojr.com</p>
+                        </div>
+                    </div>
+                    <button id="logout-button" class="w-full mt-4 flex items-center justify-center text-sm px-3 py-2 rounded-lg bg-gray-700 hover:bg-red-600 transition-colors">
+                        <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Sair
+                    </button>
+                </div>
+            </aside>
+
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <header class="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+                     <div class="flex items-center">
+                        <button id="mobile-menu-button" class="md:hidden mr-4 text-gray-600">
+                            <i data-lucide="menu" class="w-6 h-6"></i>
+                        </button>
+                        <h1 id="page-title" class="text-2xl font-semibold text-gray-800">Gerenciar Membros</h1>
+                    </div>
+                    <div class="flex items-center">
+                        <button class="relative text-gray-500 hover:text-gray-700">
+                            <i data-lucide="bell" class="w-6 h-6"></i>
+                            <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                        </button>
+                    </div>
+                </header>
+
+                <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                    
+                    <div id="members-page" class="page-content">
+                        <div class="bg-white p-8 rounded-xl shadow-md">
+                            <div class="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+                                <h2 class="text-2xl font-bold text-gray-800">Gerenciamento de Membros</h2>
+                                <button id="add-member-button" class="w-full sm:w-auto flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                                    Adicionar Membro
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <div id="member-filters" class="flex flex-wrap gap-2">
+                                    <button class="filter-button active px-3 py-1.5 text-sm font-medium rounded-md bg-white border border-gray-300 hover:bg-gray-100" data-filter="Ativo">Ativos</button>
+                                    <button class="filter-button px-3 py-1.5 text-sm font-medium rounded-md bg-white border border-gray-300 hover:bg-gray-100" data-filter="Afastado">Afastados</button>
+                                    <button class="filter-button px-3 py-1.5 text-sm font-medium rounded-md bg-white border border-gray-300 hover:bg-gray-100" data-filter="Desligado">Desligados</button>
+                                    <button class="filter-button px-3 py-1.5 text-sm font-medium rounded-md bg-white border border-gray-300 hover:bg-gray-100" data-filter="Todos">Todos</button>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diretoria</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cargo</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th scope="col" class="relative px-6 py-3"><span class="sr-only">Ações</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="members-table-body" class="bg-white divide-y divide-gray-200">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </div>
+    </div>
+    
+    <div id="add-member-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden modal-enter-from">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">Adicionar Novo Membro</h3>
+                <button id="close-add-member-modal-button" class="text-gray-500 hover:text-gray-800"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <form id="add-member-form" class="space-y-4">
+                <div>
+                    <label for="new-member-name" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                    <input type="text" id="new-member-name" required class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div>
+                    <label for="new-member-email" class="block text-sm font-medium text-gray-700">E-mail</label>
+                    <input type="email" id="new-member-email" required class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div>
+                    <label for="new-member-department" class="block text-sm font-medium text-gray-700">Diretoria</label>
+                    <select id="new-member-department" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                        <option>Projetos</option><option>Marketing</option><option>Gente & Gestão</option><option>Presidência</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="new-member-role" class="block text-sm font-medium text-gray-700">Cargo</label>
+                        <select id="new-member-role" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                            <option value="member">Membro</option><option value="director">Diretor</option><option value="vp">Vice-Presidente</option><option value="president">Presidente</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="new-member-status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="new-member-status" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                            <option>Ativo</option><option>Afastado</option><option>Desligado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end pt-4 space-x-3">
+                    <button type="button" id="cancel-add-member-button" class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">Cancelar</button>
+                    <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors">Salvar Membro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="edit-member-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden modal-enter-from">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <form id="edit-member-form">
+                <input type="hidden" id="edit-member-id">
+                <div class="p-6 border-b flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800">Editar Membro</h3>
+                    <button type="button" id="close-edit-member-modal-button" class="text-gray-500 hover:text-gray-800"><i data-lucide="x" class="w-6 h-6"></i></button>
+                </div>
+                <div id="edit-member-modal-body" class="p-6 overflow-y-auto space-y-6">
+                    </div>
+                <div class="p-6 border-t bg-gray-50 flex justify-end space-x-3">
+                    <button type="button" id="cancel-edit-member-button" class="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="birthday-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden modal-enter-from">...</div>
+
+    <script type="module" src="../js/app.js"></script>
+    <script type="module" src="../js/ui/members.js"></script>
+
+</body>
+</html>

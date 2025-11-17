@@ -1,107 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InfoBio Internal</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Interno | InfoBio Jr.</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="assets/css/style.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+<body class="bg-gray-100 antialiased">
 
-<body class="bg-gray-100 text-gray-800">
-
-  <!-- Login Page -->
-  <section id="login-page" class="flex items-center justify-center h-screen">
-    <div class="bg-white shadow-md rounded-lg p-8 w-96">
-      <h1 class="text-2xl font-bold text-center mb-6">InfoBio Internal</h1>
-      <form id="login-form" class="space-y-4">
-        <input id="email" type="email" placeholder="E-mail institucional"
-               class="w-full border rounded-md p-2" required />
-        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700">Login</button>
-        <p id="login-error" class="text-red-500 text-sm hidden text-center">Usuário não encontrado ou inativo.</p>
-      </form>
+    <div id="login-page" class="flex items-center justify-center min-h-screen bg-gray-50">
+        <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg">
+            <div class="text-center">
+                <div class="flex items-center justify-center mb-4 text-3xl font-bold text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600 mr-2"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.76.77-.76-.77a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path><path d="M12 5.5V13.5"></path><path d="M16 9.5H8"></path></svg>
+                    <span>InfoBio Jr.</span>
+                </div>
+                <h2 class="text-2xl font-semibold text-gray-700">Acesso ao Sistema Interno</h2>
+                <p class="mt-2 text-gray-500">Exclusivo para membros.</p>
+            </div>
+            <form id="login-form" class="mt-8 space-y-6">
+                <div>
+                    <label for="email" class="sr-only">Email</label>
+                    <input id="email" name="email" type="email" autocomplete="email" required class="relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" placeholder="seu-email@infobiojr.com.br">
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Senha</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required class="relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" placeholder="Senha">
+                </div>
+                <p id="login-error" class="text-red-500 text-sm hidden">Usuário não encontrado ou e-mail inválido.</p>
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                        Entrar
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-  </section>
-
-  <!-- App Container -->
-  <div id="app-container" class="hidden min-h-screen flex">
-
-    <!-- Sidebar -->
-    <aside class="w-64 bg-green-700 text-white flex flex-col p-4">
-      <div class="flex items-center space-x-2 mb-8">
-        <i data-lucide="activity"></i>
-        <h2 class="text-lg font-bold">InfoBio Hub</h2>
-      </div>
-      <nav class="flex-1 space-y-2">
-        <a href="#dashboard" class="nav-link block hover:bg-green-800 p-2 rounded">Dashboard</a>
-        <a href="#profile" class="nav-link block hover:bg-green-800 p-2 rounded">Meu Perfil</a>
-        <a href="#forms" class="nav-link block hover:bg-green-800 p-2 rounded">Formulários</a>
-        <a href="#feedback" class="nav-link block hover:bg-green-800 p-2 rounded">Reclame para GG</a>
-        <a href="#vacation" class="nav-link block hover:bg-green-800 p-2 rounded">Férias</a>
-      </nav>
-      <button id="logout-btn" class="bg-red-600 py-2 mt-4 rounded hover:bg-red-700">Sair</button>
-    </aside>
-
-    <!-- Main content -->
-    <main class="flex-1 p-6 space-y-8">
-      <section id="dashboard-page" class="page">
-        <h1 class="text-2xl font-semibold mb-4">Dashboard</h1>
-        <canvas id="membersChart" width="400" height="200"></canvas>
-      </section>
-
-      <section id="profile-page" class="page hidden">
-        <h1 class="text-2xl font-semibold mb-4">Meu Perfil</h1>
-        <div id="profile-content"></div>
-      </section>
-
-      <section id="forms-page" class="page hidden">
-        <h1 class="text-2xl font-semibold mb-4">Formulários</h1>
-        <div id="forms-content"></div>
-      </section>
-
-      <section id="feedback-page" class="page hidden">
-        <h1 class="text-2xl font-semibold mb-4">Reclame para GG</h1>
-        <form id="feedback-form" class="space-y-4">
-          <select id="feedback-type" class="border p-2 rounded w-full">
-            <option value="Sugestão">Sugestão</option>
-            <option value="Crítica">Crítica</option>
-            <option value="Elogio">Elogio</option>
-          </select>
-          <textarea id="feedback-message" placeholder="Escreva sua mensagem..." class="border rounded p-2 w-full h-32"></textarea>
-          <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded">Enviar</button>
-        </form>
-        <p id="feedback-success" class="hidden text-green-600 mt-2">Mensagem enviada!</p>
-      </section>
-
-      <section id="vacation-page" class="page hidden">
-        <h1 class="text-2xl font-semibold mb-4">Solicitar Férias</h1>
-        <form id="vacation-form" class="space-y-3">
-          <input type="date" id="start-date" class="border p-2 rounded" />
-          <input type="date" id="end-date" class="border p-2 rounded" />
-          <textarea id="vacation-reason" placeholder="Motivo (opcional)" class="border rounded p-2 w-full h-24"></textarea>
-          <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded">Enviar Solicitação</button>
-        </form>
-        <p id="vacation-success" class="hidden text-green-600 mt-2">Solicitação enviada!</p>
-      </section>
-    </main>
-  </div>
-
-  <!-- Config -->
-  <script src="config.sample.js"></script>
-
-  <!-- JS -->
-  <script src="assets/js/api.js"></script>
-  <script src="assets/js/auth.js"></script>
-  <script src="assets/js/app.js"></script>
+    
+    <script>
+        // Inicializa os ícones na página de login
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+    <script type="module" src="js/auth.js"></script>
 </body>
 </html>
