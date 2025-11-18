@@ -1,138 +1,200 @@
-// ❗️❗️ COLE A URL DA SUA IMPLANTAÇÃO AQUI ❗️❗️
-const SCRIPT_URL = "https://script.google.com/macros/s/SUA_URL_DE_IMPLANTACAO_AQUI/exec";
+// ❗️ COLE A URL DA SUA IMPLANTAÇÃO DO APPS SCRIPT AQUI ❗️
+const SCRIPT_URL = window.APP_CONFIG.SCRIPT_URL;
 
 // ==================================================
-// FUNÇÕES DE LEITURA (GET)
-// ==================================================
-
-/**
- * Busca todos os membros do Google Sheet.
- * @returns {Promise<Array<Object>>} Uma promessa que resolve para a lista de membros.
- */
-export async function getMembers() {
-    const url = `${SCRIPT_URL}?action=getMembers`;
-    return fetchData(url);
-}
-
-/**
- * Busca todos os formulários do Google Sheet.
- * @returns {Promise<Array<Object>>}
- */
-export async function getForms() {
-    const url = `${SCRIPT_URL}?action=getForms`;
-    return fetchData(url);
-}
-
-/**
- * Busca todas as reuniões do Google Sheet.
- * @returns {Promise<Object>}
- */
-export async function getMeetings() {
-    const url = `${SCRIPT_URL}?action=getMeetings`;
-    return fetchData(url);
-}
-
-// ==================================================
-// FUNÇÕES DE ESCRITA (POST)
+// FUNÇÕES GENÉRICAS DE CHAMADA À API
 // ==================================================
 
 /**
- * Adiciona um novo membro ao Google Sheet.
- * @param {Object} memberData - O objeto do membro (ex: { name: '...', email: '...' })
- * @returns {Promise<Object>} A resposta do servidor.
+ * Chamada GET para a API do Apps Script.
+ * @param {string} resource - Nome do recurso (ex: "members", "feedback").
+ * @param {Object} params - Parâmetros extras de query.
  */
-export async function addMember(memberData) {
-    const payload = {
-        action: 'addMember',
-        data: memberData
-    };
-    return postData(payload);
-}
+async function apiGet(resource, params = {}) {
+    const search = new URLSearchParams({
+        resource,
+        ...params
+    }).toString();
 
-/**
- * Atualiza um membro existente no Google Sheet.
- * @param {Object} memberData - O objeto COMPLETO do membro.
- * @returns {Promise<Object>} A resposta do servidor.
- */
-export async function updateMember(memberData) {
-    const payload = {
-        action: 'updateMember',
-        data: memberData
-    };
-    return postData(payload);
-}
-
-// (Adicione 'addForm', 'updateForm' aqui conforme sua necessidade)
-
-// ==================================================
-// FUNÇÕES AUXILIARES DE FETCH
-// ==================================================
-
-/**
- * Função genérica para buscar dados (GET).
- */
-async function fetchData(url) {
     try {
-        const response = await fetch(url);
+        const response = await fetch(`${SCRIPT_URL}?${search}`);
         if (!response.ok) {
-            throw new Error(`Erro na rede: ${response.statusText}`);
+            throw new Error(`Erro HTTP: ${response.status} ${response.statusText}`);
         }
-        const data = await response.json();
-        return data;
+        const json = await response.json();
+        return json; // { ok: true/false, data: ... }
     } catch (error) {
-        console.error("Falha ao buscar dados:", error);
-        return []; // Retorna um array vazio em caso de falha
+        console.error("Falha ao buscar dados da API:", error);
+        return { ok: false, data: null, error: error.message };
     }
 }
 
 /**
- * Função genérica para enviar dados (POST).
+ * Chamada POST para a API do Apps Script.
+ * @param {string} resource - Nome da ação/recurso (ex: "createFeedback").
+ * @param {Object} body - Dados a serem enviados.
  */
-async function postData(payload) {
+async function apiPost(resource, body = {}) {
     try {
         const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            // redirect: 'follow', // Pode ser necessário dependendo da configuração
-            body: JSON.stringify(payload),
+            method: "POST",
             headers: {
-                'Content-Type': 'text/plain;charset=utf-8', // Requerido pelo Apps Script
+                "Content-Type": "application/json",
             },
+            body: JSON.stringify({
+                resource,
+                ...body,
+            }),
         });
+
         if (!response.ok) {
-            throw new Error(`Erro na rede: ${response.statusText}`);
+            throw new Error(`Erro HTTP: ${response.status} ${response.statusText}`);
         }
-        const data = await response.json();
-        return data;
+
+        const json = await response.json();
+        return json; // { ok: true/false, ... }
     } catch (error) {
-        console.error("Falha ao enviar dados:", error);
-        return { success: false, error: error.message };
+        console.error("Falha ao enviar dados para a API:", error);
+        return { ok: false, error: error.message };
     }
 }
 
-// ... (abaixo das outras funções POST) ...
+// ==================================================
+// FUNÇÕES ESPECÍFICAS (USADAS PELO SISTEMA)
+// ==================================================
 
 /**
- * Adiciona um novo formulário ao Google Sheet.
- * @param {Object} formData - O objeto do formulário (ex: { id: 3, title: '...', target: '...' })
- * @returns {Promise<Object>} A resposta do servidor.
+ * Busca todos os membros (aba "members").
+ * Retorna diretamente o ARRAY de membros (para usar em auth.js).
  */
-export async function addForm(formData) {
-    const payload = {
-        action: 'addForm',
-        data: formData
-    };
-    return postData(payload);
+export async function getMembers() {
+    const res = await apiGet("members");
+    if (!res.ok || !Array.isArray(res.data)) {
+        return [];
+    }
+    return res.data;
 }
 
 /**
- * Atualiza um formulário existente no Google Sheet.
- * @param {Object} formData - O objeto COMPLETO do formulário.
- * @returns {Promise<Object>} A resposta do servidor.
+ * (Opcional) Busca um membro específico por e-mail usando o endpoint memberByEmail_.
+ * Não é obrigatório pro login atual, mas já deixo pronto.
+ */
+export async function getMemberByEmail(email) {
+    const res = await apiGet("memberByEmail", { email });
+    if (!res.ok) return null;
+    return res.data;
+}
+
+/**
+ * Busca todos os registros de presença (aba "attendance").
+ */
+export async function getAttendance() {
+    const res = await apiGet("attendance");
+    if (!res.ok || !Array.isArray(res.data)) {
+        return [];
+    }
+    return res.data;
+}
+
+/**
+ * Cria um novo registro de presença (aba "attendance").
+ * Espera um objeto ex: { date, memberEmail, slot, type, present }
+ */
+export async function createAttendance(attendanceData) {
+    return apiPost("createAttendance", attendanceData);
+}
+
+/**
+ * Busca todas as solicitações de férias (aba "vacations").
+ */
+export async function getVacations() {
+    const res = await apiGet("vacations");
+    if (!res.ok || !Array.isArray(res.data)) {
+        return [];
+    }
+    return res.data;
+}
+
+/**
+ * Cria uma nova solicitação de férias (aba "vacations").
+ * Ex: { email, startDate, endDate, reason }
+ */
+export async function createVacation(vacationData) {
+    return apiPost("createVacation", vacationData);
+}
+
+/**
+ * Busca todos os feedbacks (aba "feedback").
+ */
+export async function getFeedback() {
+    const res = await apiGet("feedback");
+    if (!res.ok || !Array.isArray(res.data)) {
+        return [];
+    }
+    return res.data;
+}
+
+/**
+ * Envia um novo feedback (aba "feedback").
+ * Ex: { email, type, message }
+ */
+export async function createFeedback(feedbackData) {
+    return apiPost("createFeedback", feedbackData);
+}
+
+// ==================================================
+// FUNÇÕES LEGADAS / FUTURAS (forms, meetings, etc.)
+// ==================================================
+// Estas funções só vão funcionar quando você criar
+// os endpoints correspondentes no Apps Script.
+// Deixo aqui já adaptadas para o novo padrão.
+
+/**
+ * Busca formulários (quando você implementar o recurso "forms" na API).
+ */
+export async function getForms() {
+    const res = await apiGet("forms");
+    if (!res.ok || !Array.isArray(res.data)) {
+        return [];
+    }
+    return res.data;
+}
+
+/**
+ * Exemplo de função para reuniões, se no futuro você criar um endpoint "meetings".
+ */
+export async function getMeetings() {
+    const res = await apiGet("meetings");
+    if (!res.ok || !Array.isArray(res.data)) {
+        return [];
+    }
+    return res.data;
+}
+
+/**
+ * Adiciona um novo formulário (quando tiver endpoint "createForm").
+ */
+export async function addForm(formData) {
+    return apiPost("createForm", formData);
+}
+
+/**
+ * Atualiza um formulário existente (quando tiver endpoint "updateForm").
  */
 export async function updateForm(formData) {
-    const payload = {
-        action: 'updateForm',
-        data: formData
-    };
-    return postData(payload);
+    return apiPost("updateForm", formData);
+}
+
+/**
+ * Adiciona um novo membro (se você criar endpoint "createMember" no Apps Script).
+ */
+export async function addMember(memberData) {
+    return apiPost("createMember", memberData);
+}
+
+/**
+ * Atualiza um membro (se você criar endpoint "updateMember" no Apps Script).
+ */
+export async function updateMember(memberData) {
+    return apiPost("updateMember", memberData);
 }

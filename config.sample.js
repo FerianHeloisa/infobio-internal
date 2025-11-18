@@ -1,3 +1,3 @@
 window.APP_CONFIG = {
-  API_BASE: "https://script.google.com/macros/s/SEU_SCRIPT_ID/exec"
+    SCRIPT_URL: "SUA_URL_DO_APPS_SCRIPT_AQUI"
 };
