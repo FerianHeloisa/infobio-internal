@@ -15,5 +15,5 @@
 /* Classe para os tabs de presença */
 #attendance-tabs .tab-button.active {
     border-color: #16a34a; /* border-green-600 */
-    color: #15803d; /* text-green-700 */
+    color: blue; /* text-green-700 */
 }
