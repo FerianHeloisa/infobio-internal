@@ -8,7 +8,7 @@
 /* Classe para o 'active' dos filtros da tabela de membros */
 #member-filters .filter-button.active {
     background-color: #16a34a; /* bg-green-600 */
-    color: white;
+    color: rgb(255, 0, 0);
     border-color: #16a34a;
 }
 
