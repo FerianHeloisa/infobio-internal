@@ -8,12 +8,12 @@
 /* Classe para o 'active' dos filtros da tabela de membros */
 #member-filters .filter-button.active {
     background-color: #16a34a; /* bg-green-600 */
-    color: rgb(255, 0, 0);
+    color: rgb(255, 255, 255);
     border-color: #16a34a;
 }
 
 /* Classe para os tabs de presença */
 #attendance-tabs .tab-button.active {
     border-color: #16a34a; /* border-green-600 */
-    color: blue; /* text-green-700 */
+    color: rgb(0, 255, 30); /* text-green-700 */
 }
