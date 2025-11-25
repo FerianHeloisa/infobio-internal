@@ -1,5 +1,9 @@
 // ❗️ COLE A URL DA SUA IMPLANTAÇÃO DO APPS SCRIPT AQUI ❗️
-const SCRIPT_URL = window.APP_CONFIG.SCRIPT_URL;
+const SCRIPT_URL = window.APP_CONFIG?.SCRIPT_URL || "";
+
+if (!SCRIPT_URL) {
+    console.error("❌ ERRO: SCRIPT_URL não carregou. Verifique config.js.");
+}
 
 // ==================================================
 // FUNÇÕES GENÉRICAS DE CHAMADA À API
@@ -184,6 +188,7 @@ export async function addForm(formData) {
 export async function updateForm(formData) {
     return apiPost("updateForm", formData);
 }
+
 
 /**
  * Adiciona um novo membro (se você criar endpoint "createMember" no Apps Script).

@@ -40,7 +40,8 @@ export function checkAuth() {
 // =========================
 
 // Coloca aqui o CLIENT_ID que você criou no Google Cloud
-const GOOGLE_CLIENT_ID = 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com';
+// DEFINIÇÃO ABSOLUTAMENTE GLOBAL
+window.GOOGLE_CLIENT_ID = "553623932176-rm5for2v0k06vv5lpalhp4emcane9hip.apps.googleusercontent.com";
 
 // Se quiser limitar domínio:
 const ALLOWED_DOMAINS = ['infobiojr.com.br', 'usp.br'];
@@ -70,6 +71,7 @@ async function handleGoogleCredentialResponse(response) {
     try {
         const data = parseJwt(response.credential);
         const email = (data.email || '').toLowerCase();
+        console.log("EMAIL QUE VEIO DO GOOGLE:", email);
         const name = data.name || '';
         const picture = data.picture || '';
         const emailVerified = data.email_verified;
@@ -98,7 +100,10 @@ async function handleGoogleCredentialResponse(response) {
         const user = membersDB.find(
             m =>
                 String(m.email || '').toLowerCase() === email &&
-                String(m.status || '').toLowerCase() === 'ativo'
+                ['ativo', 'ativa', 'atvx', 'at', 'ok'].includes(
+                String(m.status || '').toLowerCase()
+)
+
         );
 
         if (!user) {
@@ -140,35 +145,38 @@ window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
 // =========================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Se já tiver usuário logado e estiver no index, pula direto para o dashboard
-    const current = getCurrentUser();
-    if (current && window.location.pathname.endsWith('index.html')) {
-        window.location.href = 'pages/dashboard.html';
+    const googleButtonContainer = document.getElementById('google-login-button');
+
+    if (!googleButtonContainer) {
+        console.warn("Div do botão Google não encontrada.");
         return;
     }
 
-    // Inicializa ícones (como você já fazia)
-    if (window.lucide) {
-        lucide.createIcons();
-    }
+    function tryRenderButton() {
+        if (!window.google || !google.accounts || !google.accounts.id) {
+            console.log("SDK do Google ainda não carregou, tentando de novo...");
+            return setTimeout(tryRenderButton, 200);
+        }
 
-    // Inicializa o botão de login do Google
-    const googleButtonContainer = document.getElementById('google-login-button');
+        console.log("SDK carregado! Renderizando botão...");
 
-    if (googleButtonContainer && window.google && google.accounts && google.accounts.id) {
         google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
+            client_id: window.GOOGLE_CLIENT_ID,
             callback: handleGoogleCredentialResponse,
             auto_select: false,
             cancel_on_tap_outside: true
         });
 
         google.accounts.id.renderButton(googleButtonContainer, {
-            theme: 'outline',
-            size: 'large',
-            text: 'continue_with',
-            shape: 'pill',
-            width: '300'
+            theme: "outline",
+            size: "large",
+            width: 320,
+            text: "continue_with",
+            shape: "pill"
         });
+
+        console.log("Botão Google renderizado com sucesso!");
     }
+
+    tryRenderButton();
 });
