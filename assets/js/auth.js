@@ -8,7 +8,7 @@ function login(user) {
     // Salva o usuário logado na sessão
     sessionStorage.setItem('loggedInUser', JSON.stringify(user));
     // Redireciona para o dashboard (modelo “várias páginas”)
-    window.location.href = 'pages/dashboard.html';
+    window.location.href = '/infobio-internal/pages/dashboard.html';
 }
 
 export function logout() {
