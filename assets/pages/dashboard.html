@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Verifica se existe usuário na sessão. Se não, chuta para o login imediatamente.
+        // O caminho '../../index.html' assume que você está em assets/pages/
+        if (!sessionStorage.getItem('loggedInUser')) {
+            window.location.replace('../../index.html');
+        }
+    </script>
     <title>Dashboard | InfoBio Jr.</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
