@@ -6,39 +6,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function initDashboard() {
         const user = getCurrentUser();
+        
+        // Elementos de loading (opcional, mas recomendado)
+        document.getElementById('active-members-kpi').textContent = "...";
 
-        // Carregar dados do BD
-        const members = await getMembers();
-        const vacations = await getVacations();
-        const forms = await getForms();
+        try {
+            // Carregar dados reais
+            const [members, vacations, forms] = await Promise.all([
+                getMembers(),
+                getVacations(),
+                getForms()
+            ]);
 
-        // KPI 1 — Membros ativos
-        const activeMembers = members.filter(m => m.status === "Ativo").length;
-        document.getElementById('active-members-kpi').textContent = activeMembers;
+            // Validação de arrays (caso a API falhe e retorne undefined)
+            const safeMembers = Array.isArray(members) ? members : [];
+            const safeVacations = Array.isArray(vacations) ? vacations : [];
+            const safeForms = Array.isArray(forms) ? forms : [];
 
-        // KPI 2 — Férias pendentes (Diretor, VP, Presidente)
-        const pendingVac = vacations.filter(v => v.status === "Pendente").length;
-        const pendingVacKpi = document.getElementById('pending-vacations-kpi');
-        if (pendingVacKpi) pendingVacKpi.textContent = pendingVac;
+            // KPI 1 — Membros ativos
+            const activeMembers = safeMembers.filter(m => m.status === "Ativo").length;
+            document.getElementById('active-members-kpi').textContent = activeMembers;
 
-        // KPI 3 — Formulários pendentes (membro)
-        const formsForUser = forms.filter(f => 
-            f.status === "Ativo" &&
-            (f.target === "all_members" || f.target === user.department)
-        );
-        const pendingForms = document.getElementById('pending-forms-kpi');
-        if (pendingForms) pendingForms.textContent = formsForUser.length;
+            // KPI 2 — Férias pendentes
+            const pendingVac = safeVacations.filter(v => v.status === "Pendente").length;
+            const pendingVacKpi = document.getElementById('pending-vacations-kpi');
+            if (pendingVacKpi) pendingVacKpi.textContent = pendingVac;
 
-        // KPI 4 — Férias agendadas do membro
-        const myFuture = vacations.filter(v => 
-            v.email === user.email && v.status === "Aprovado"
-        ).length;
-        const scheduled = document.getElementById('scheduled-vacations-kpi');
-        if (scheduled) scheduled.textContent = myFuture;
+            // KPI 3 — Formulários pendentes
+            const formsForUser = safeForms.filter(f => 
+                f.status === "Ativo" &&
+                (f.target === "all_members" || f.target === user.department)
+            );
+            const pendingForms = document.getElementById('pending-forms-kpi');
+            if (pendingForms) pendingForms.textContent = formsForUser.length;
 
-        // Receita — você decide depois se vem de forms, sheet ou manual
-        const revenueBox = document.getElementById('revenue-kpi');
-        if (revenueBox) revenueBox.textContent = "—";
+            // KPI 4 — Férias agendadas do usuário
+            const myFuture = safeVacations.filter(v => 
+                v.email === user.email && v.status === "Aprovado"
+            ).length;
+            const scheduled = document.getElementById('scheduled-vacations-kpi');
+            if (scheduled) scheduled.textContent = myFuture;
+
+        } catch (error) {
+            console.error("Erro ao carregar dashboard:", error);
+            document.getElementById('active-members-kpi').textContent = "-";
+        }
     }
 
     initDashboard();

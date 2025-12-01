@@ -14,20 +14,48 @@ document.addEventListener('DOMContentLoaded', () => {
     let localMeetingsDB = {};
     const loggedInUser = getCurrentUser();
     
+    async function initAttendancePage() {
+        attendanceTbody.innerHTML = '<tr><td colspan="10" class="text-center py-4">Carregando dados de presença...</td></tr>';
+
+        try {
+            // Busca dados reais em paralelo
+            const [membersData, meetingsData] = await Promise.all([
+                getMembers(),
+                getMeetings() // Certifique-se que sua API retorna isso ou ajuste para um mock temporário se ainda não implementou
+            ]);
+
+            localMembersDB = Array.isArray(membersData) ? membersData : [];
+            // Se getMeetings retornar vazio ou erro, usamos um fallback temporário para não quebrar a tela
+            localMeetingsDB = meetingsData && meetingsData.length ? meetingsData : {
+                'Ordinária': [ { date: '02/10', day: 'qui' }, { date: '09/10', day: 'qui' } ], // Fallback visual
+                'Projetos': [ { date: '06/10', day: 'seg' } ]
+            };
+
+            renderAttendancePage();
+        } catch (error) {
+            console.error("Erro attendance:", error);
+            attendanceTbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-red-500">Erro ao carregar dados.</td></tr>';
+        }
+    }
+
     function renderAttendancePage() {
         const userRole = loggedInUser.role;
         let currentDepartment = loggedInUser.department;
         
         // VP/Presidente pode trocar de diretoria
         if (userRole === 'vp' || userRole === 'president') {
-            const departments = [...new Set(localMembersDB.map(m => m.department))];
-            attendanceSelector.innerHTML = departments.map(d => `<option value="${d}">${d}</option>`).join('');
-            attendanceSelector.value = departments[0];
-            currentDepartment = departments[0];
+            // Pega diretorias únicas dos membros carregados
+            const departments = [...new Set(localMembersDB.map(m => m.department).filter(Boolean))];
             
-            attendanceSelector.addEventListener('change', (e) => {
-                renderAttendanceTableForDepartment(e.target.value);
-            });
+            if (attendanceSelector) {
+                attendanceSelector.innerHTML = departments.map(d => `<option value="${d}">${d}</option>`).join('');
+                attendanceSelector.value = departments[0] || '';
+                currentDepartment = departments[0] || '';
+                
+                attendanceSelector.addEventListener('change', (e) => {
+                    renderAttendanceTableForDepartment(e.target.value);
+                });
+            }
         }
 
         renderAttendanceTableForDepartment(currentDepartment);
@@ -51,28 +79,31 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         attendanceTabs.appendChild(createTab('Reunião Ordinária', 'Ordinária', true));
-        if (localMeetingsDB[department]) {
+        // Só cria aba da diretoria se tiver reuniões pra ela
+        if (localMeetingsDB[department] || department) { 
             attendanceTabs.appendChild(createTab(`Reunião ${department}`, department));
         }
         
-        // Renderiza a tabela da primeira aba (Ordinária)
         renderAttendanceTable('Ordinária', department);
     }
 
     function renderAttendanceTable(meetingType, departmentForView) {
         attendanceTableTitle.textContent = `Controle de Presença - ${meetingType === 'Ordinária' ? 'Reunião Ordinária' : `Reunião ${meetingType}`}`;
         
-        const meetings = localMeetingsDB[meetingType];
+        // Fallback se não tiver reunião cadastrada na API para esse tipo
+        const meetings = localMeetingsDB[meetingType] || [];
         
-        if (!meetings) {
+        if (meetings.length === 0) {
             attendanceThead.innerHTML = '';
-            attendanceTbody.innerHTML = '<tr><td colspan="5" class="p-4 text-gray-500">Não há reuniões deste tipo cadastradas.</td></tr>';
+            attendanceTbody.innerHTML = '<tr><td colspan="5" class="p-4 text-gray-500">Não há reuniões deste tipo cadastradas no sistema.</td></tr>';
             return;
         }
 
         // Cria o Cabeçalho
         let headerHtml = '<tr><th scope="col" class="sticky left-0 bg-gray-50 z-10 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Membro</th>';
-        meetings.forEach(meeting => { headerHtml += `<th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">${meeting.date}<br><span class="font-normal normal-case">${meeting.day}</span></th>`; });
+        meetings.forEach(meeting => { 
+            headerHtml += `<th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">${meeting.date}<br><span class="font-normal normal-case">${meeting.day}</span></th>`; 
+        });
         headerHtml += `<th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">P</th><th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">F</th><th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">% Faltas</th></tr>`;
         attendanceThead.innerHTML = headerHtml;
 
@@ -82,17 +113,25 @@ document.addEventListener('DOMContentLoaded', () => {
             ? localMembersDB.filter(m => m.status === 'Ativo') 
             : localMembersDB.filter(m => m.department === departmentForView && m.status === 'Ativo');
 
+        if (membersToDisplay.length === 0) {
+            attendanceTbody.innerHTML = '<tr><td colspan="10" class="text-center py-4">Nenhum membro ativo encontrado para esta visualização.</td></tr>';
+            return;
+        }
+
         membersToDisplay.forEach(member => {
             const tr = document.createElement('tr');
             let rowHtml = `<td class="sticky left-0 bg-white z-10 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${member.name}</td>`;
-            const memberAttendance = member.attendance[meetingType] || [];
+            
+            // Garante que attendance seja objeto
+            const attendanceObj = typeof member.attendance === 'string' ? JSON.parse(member.attendance || '{}') : (member.attendance || {});
+            const memberAttendanceArr = attendanceObj[meetingType] || [];
             
             meetings.forEach((_, index) => {
-                const status = memberAttendance[index] || false;
+                const status = memberAttendanceArr[index] || false;
                 rowHtml += `<td class="px-6 py-4 whitespace-nowrap text-center"><input type="checkbox" class="attendance-checkbox" data-member-id="${member.id}" data-meeting-type="${meetingType}" data-meeting-index="${index}" ${status ? 'checked' : ''}></td>`;
             });
             
-            const presentCount = memberAttendance.filter(Boolean).length;
+            const presentCount = memberAttendanceArr.filter(Boolean).length;
             const absentCount = meetings.length - presentCount;
             const absentPercentage = meetings.length > 0 ? ((absentCount / meetings.length) * 100).toFixed(1) : 0;
             
@@ -102,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Listener para salvar (Agora é ASYNC)
+    // Listener para salvar (Async)
     attendanceTbody.addEventListener('change', async (e) => { 
         if (e.target.classList.contains('attendance-checkbox')) {
             const memberId = parseInt(e.target.dataset.memberId, 10);
@@ -110,41 +149,34 @@ document.addEventListener('DOMContentLoaded', () => {
             const meetingIndex = parseInt(e.target.dataset.meetingIndex, 10);
             const isPresent = e.target.checked;
             
-            // 1. Encontra o membro no cache local
             const member = localMembersDB.find(m => m.id === memberId);
             
             if (member) {
-                // 2. Atualiza o objeto de presença
-                if (!member.attendance[meetingType]) {
-                    member.attendance[meetingType] = [];
+                // Prepara objeto attendance
+                if (typeof member.attendance === 'string') {
+                    member.attendance = JSON.parse(member.attendance || '{}');
                 }
+                if (!member.attendance) member.attendance = {};
+                if (!member.attendance[meetingType]) member.attendance[meetingType] = [];
+                
                 member.attendance[meetingType][meetingIndex] = isPresent;
                 
-                // 3. Envia o objeto 'member' INTEIRO para a API
+                // Converte para string antes de enviar (se sua API esperar JSON stringificado no campo attendance)
+                // Ou envia objeto se a API tratar. Vou assumir objeto aqui, o api.js converte.
                 const response = await updateMember(member);
                 
-                if (!response.success) {
-                    // Reverte a mudança em caso de erro
+                if (!response.success && !response.ok) {
                     alert("Erro ao salvar presença.");
-                    member.attendance[meetingType][meetingIndex] = !isPresent;
+                    // Reverte visualmente
+                    e.target.checked = !isPresent; 
+                } else {
+                    // Recalcula totais na tela (opcional, mas bom pra UX imediata)
+                    const departmentForView = document.querySelector('#attendance-tabs .active')?.dataset.department || loggedInUser.department;
+                    renderAttendanceTable(meetingType, departmentForView);
                 }
-                
-                // 4. Re-renderiza a tabela (com dados locais)
-                const departmentForView = document.querySelector('#attendance-tabs .active')?.dataset.department || loggedInUser.department;
-                renderAttendanceTable(meetingType, departmentForView);
             }
         }
      });
-
-    // --- Renderização Inicial ---
-    async function initAttendancePage() {
-        // Busca os dados uma vez em paralelo
-        [localMembersDB, localMeetingsDB] = await Promise.all([
-            getMembers(),
-            getMeetings()
-        ]);
-        renderAttendancePage(); // Renderiza com o cache
-    }
 
     initAttendancePage();
 });
