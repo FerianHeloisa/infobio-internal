@@ -1,3 +1,3 @@
 window.APP_CONFIG = {
-    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxgP26hYGXNqSGZYHb2YmjooLXjIVRg-Eu4FilaLzhuMyh0gI7wzQEVQYiBKkAQlDlifg/exec"
+    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzG_sA5DHE75K6_lm-oxL8lU4hSS_490NKtiKAWWpOpxuCBmjOvSiIlWOjhoivaeuJPZg/exec"
 };
