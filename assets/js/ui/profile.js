@@ -1,105 +1,210 @@
 import { getCurrentUser } from '../auth.js';
 import { updateMember, getMembers } from '../api.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+// Função de inicialização imediata (IIFE)
+(async function initProfilePage() {
+    // 1. Trava de página (só roda se tiver o elemento)
     if (!document.getElementById('profile-page')) return;
 
-    let attendanceChartInstance;
+    console.log("🚀 Iniciando Perfil...");
+
     const profileForm = document.getElementById('profile-form');
     const myTasksList = document.getElementById('my-pending-tasks-list');
+    let attendanceChartInstance;
     
-    // Tenta pegar usuário fresco da API, senão usa o da sessão
+    // 2. Pega usuário da sessão (Cache)
     let loggedInUser = getCurrentUser();
     
+    if (!loggedInUser) {
+        console.error("❌ Erro: Usuário não encontrado na sessão.");
+        return;
+    }
+
+    // 3. Busca dados frescos da API em background
     try {
         const members = await getMembers();
-        const fresUser = members.find(m => m.id === loggedInUser.id);
-        if (fresUser) {
-            loggedInUser = fresUser;
-            sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUser)); // Atualiza cache
+        if (Array.isArray(members)) {
+            const freshUser = members.find(m => m.email === loggedInUser.email);
+            if (freshUser) {
+                // Preserva a foto do Google se a da planilha estiver vazia
+                if (!freshUser.photoUrl && loggedInUser.photoUrl) {
+                    freshUser.photoUrl = loggedInUser.photoUrl;
+                }
+                loggedInUser = freshUser;
+                sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                renderProfilePage(); // Re-renderiza com dados novos
+            }
         }
     } catch (e) {
-        console.warn("Usando cache de usuário offline");
+        console.warn("⚠️ Usando cache offline:", e);
     }
+
+    // 4. Renderiza a página
+    renderProfilePage();
 
     function renderProfilePage() {
-        if (!loggedInUser) return;
-        
-        // Popula os campos
-        document.getElementById('profile-name').value = loggedInUser.name || '';
-        // Converte data se necessário (yyyy-MM-dd)
-        let dob = loggedInUser.dob || '';
-        if (dob && dob.includes('T')) dob = dob.split('T')[0];
-        document.getElementById('profile-dob').value = dob;
-        
-        document.getElementById('profile-photo-url').value = loggedInUser.photoUrl || '';
+        // --- Preenche Inputs ---
+        const nameInput = document.getElementById('profile-name');
+        const dobInput = document.getElementById('profile-dob');
+        const photoInput = document.getElementById('profile-photo-url');
 
-        // Tarefas
-        myTasksList.innerHTML = '';
-        // Parse de tarefas se vier como string JSON
-        let tasks = [];
-        try {
-            tasks = typeof loggedInUser.tasks === 'string' ? JSON.parse(loggedInUser.tasks) : (loggedInUser.tasks || []);
-        } catch(e) { tasks = []; }
-
-        const pendingTasks = tasks.filter(t => t.status === 'pending');
+        if (nameInput) nameInput.value = loggedInUser.name || '';
         
-        if (pendingTasks.length > 0) {
-            pendingTasks.forEach(task => {
-                const li = document.createElement('li');
-                li.className = 'flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50';
-                li.innerHTML = `
-                    <span>${task.name}</span>
-                    <button type="button" data-task-name="${task.name}" class="complete-task-btn px-3 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors">Concluir</button>
-                `;
-                myTasksList.appendChild(li);
-            });
-        } else {
-            myTasksList.innerHTML = '<li class="text-gray-500">Nenhuma tarefa pendente.</li>';
+        // Data (YYYY-MM-DD)
+        if (dobInput) {
+            let dob = loggedInUser.dob || '';
+            if (dob && dob.includes('T')) dob = dob.split('T')[0];
+            
+            // Converte DD/MM/YYYY para YYYY-MM-DD se necessário
+            if (dob.includes('/')) {
+                const parts = dob.split('/'); 
+                if(parts.length === 3) dob = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            dobInput.value = dob;
+        }
+        
+        // --- FOTO (Bloqueada e Apenas Leitura) ---
+        if (photoInput) {
+            // Mostra a URL real ou um texto informativo
+            photoInput.value = loggedInUser.photoUrl || '';
+            photoInput.disabled = true; // Bloqueia edição
+            photoInput.classList.add('bg-gray-100', 'text-gray-500', 'cursor-not-allowed');
+            photoInput.title = "A foto é gerenciada pelo login do Google.";
         }
 
-        // Gráfico Presença (Simulação visual baseada em dados)
-        // Se quiser real, teria que parsear o attendance object
-        const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
-        let presentCount = 8; // Mock para visual, já que attendance é complexo
-        let totalMeetings = 10;
-        
-        if (attendanceChartInstance) attendanceChartInstance.destroy();
-        attendanceChartInstance = new Chart(attendanceCtx, { type: 'doughnut', data: { datasets: [{ data: [presentCount, totalMeetings - presentCount], backgroundColor: ['#16a34a', '#e5e7eb'], borderWidth: 0, borderRadius: 5 }] }, options: { cutout: '80%', plugins: { tooltip: { enabled: false } } } });
+        // --- Tarefas ---
+        if (myTasksList) {
+            myTasksList.innerHTML = '';
+            let tasks = [];
+            try {
+                tasks = typeof loggedInUser.tasks === 'string' ? JSON.parse(loggedInUser.tasks) : (loggedInUser.tasks || []);
+            } catch(e) { tasks = []; }
+
+            const pendingTasks = tasks.filter(t => t.status === 'pending');
+            
+            if (pendingTasks.length > 0) {
+                pendingTasks.forEach(task => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50';
+                    li.innerHTML = `
+                        <span>${task.name}</span>
+                        <button type="button" data-task-name="${task.name}" class="complete-task-btn px-3 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors">Concluir</button>
+                    `;
+                    myTasksList.appendChild(li);
+                });
+            } else {
+                myTasksList.innerHTML = '<li class="text-gray-500 text-sm">Nenhuma tarefa pendente.</li>';
+            }
+        }
+
+        // --- Gráfico ---
+        const canvas = document.getElementById('attendanceChart');
+        if (canvas) {
+            const attendanceCtx = canvas.getContext('2d');
+            let presentCount = 0;
+            let totalMeetings = 0;
+            
+            try {
+                const attObj = typeof loggedInUser.attendance === 'string' ? JSON.parse(loggedInUser.attendance) : (loggedInUser.attendance || {});
+                Object.values(attObj).forEach(arr => {
+                    if (Array.isArray(arr)) {
+                        totalMeetings += arr.length;
+                        presentCount += arr.filter(Boolean).length;
+                    }
+                });
+            } catch(e) {}
+
+            if (totalMeetings === 0) totalMeetings = 1; 
+            const percentage = Math.round((presentCount / totalMeetings) * 100);
+
+            const pctDisplay = document.getElementById('attendance-percentage');
+            const summaryDisplay = document.getElementById('attendance-summary');
+            
+            if(pctDisplay) pctDisplay.textContent = `${percentage}%`;
+            if(summaryDisplay) summaryDisplay.textContent = `${presentCount} presenças`;
+            
+            if (attendanceChartInstance) attendanceChartInstance.destroy();
+            attendanceChartInstance = new Chart(attendanceCtx, { 
+                type: 'doughnut', 
+                data: { 
+                    datasets: [{ 
+                        data: [presentCount, totalMeetings - presentCount], 
+                        backgroundColor: ['#16a34a', '#e5e7eb'], 
+                        borderWidth: 0, 
+                        borderRadius: 5 
+                    }] 
+                }, 
+                options: { cutout: '80%', plugins: { tooltip: { enabled: false } } } 
+            });
+        }
     }
 
-    profileForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitBtn = profileForm.querySelector('button[type="submit"]');
-        submitBtn.textContent = "Salvando...";
-        submitBtn.disabled = true;
-        
-        loggedInUser.name = document.getElementById('profile-name').value;
-        loggedInUser.dob = document.getElementById('profile-dob').value;
-        loggedInUser.photoUrl = document.getElementById('profile-photo-url').value;
-
-        // Se tasks/attendance forem objetos, stringify antes de enviar se a API exigir
-        // Aqui enviamos o objeto e deixamos o api.js lidar (ou o apps script)
-        const response = await updateMember(loggedInUser);
-
-        if (response.success || response.ok) {
-            sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+    // --- Salvar Perfil ---
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = profileForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = "Salvando...";
+            submitBtn.disabled = true;
             
-            // Atualiza sidebar visualmente
-            const nameDisplay = document.getElementById('user-name-display');
-            if (nameDisplay) nameDisplay.textContent = `${loggedInUser.name} (${loggedInUser.role})`;
-            const avatarDisplay = document.getElementById('user-avatar-display');
-            if (avatarDisplay) avatarDisplay.src = loggedInUser.photoUrl;
+            // 1. Atualiza APENAS Nome e Data (NÃO mexe na foto)
+            loggedInUser.name = document.getElementById('profile-name').value;
+            loggedInUser.dob = document.getElementById('profile-dob').value;
             
-            const successMsg = document.getElementById('profile-save-success');
-            successMsg.classList.remove('hidden');
-            setTimeout(() => successMsg.classList.add('hidden'), 2000);
-        } else {
-            alert("Erro ao salvar perfil.");
-        }
-        submitBtn.textContent = "Salvar Alterações";
-        submitBtn.disabled = false;
-    });
+            // A photoUrl continua a que já estava no objeto loggedInUser
+            // Se você incluir a linha aqui lendo do input, vai salvar valor errado!
 
-    renderProfilePage();
-});
+            // 2. Envia para Backend
+            const response = await updateMember(loggedInUser);
+
+            if (response.success || response.ok) {
+                sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                
+                const successMsg = document.getElementById('profile-save-success');
+                if(successMsg) {
+                    successMsg.classList.remove('hidden');
+                    setTimeout(() => {
+                        successMsg.classList.add('hidden');
+                        window.location.reload(); // Recarrega para atualizar sidebar
+                    }, 1000);
+                }
+            } else {
+                alert("Erro ao salvar: " + (response.error || "Tente novamente."));
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+    
+    // --- Completar Tarefa ---
+    if (myTasksList) {
+        myTasksList.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('complete-task-btn')) {
+                const taskName = e.target.dataset.taskName;
+                let tasks = [];
+                try {
+                    tasks = typeof loggedInUser.tasks === 'string' ? JSON.parse(loggedInUser.tasks) : (loggedInUser.tasks || []);
+                } catch(e) { tasks = []; }
+
+                const taskInDB = tasks.find(t => t.name === taskName);
+
+                if (taskInDB) {
+                    taskInDB.status = 'completed';
+                    loggedInUser.tasks = tasks; // Atualiza objeto
+                    
+                    e.target.textContent = "Salvando...";
+                    
+                    const response = await updateMember(loggedInUser);
+                    if (response.success || response.ok) {
+                        sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                        renderProfilePage(); 
+                    } else {
+                        alert("Erro ao completar tarefa.");
+                        e.target.textContent = "Concluir";
+                    }
+                }
+            }
+        });
+    }
+})();

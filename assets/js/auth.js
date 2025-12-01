@@ -14,7 +14,7 @@ function login(user) {
 export function logout() {
     sessionStorage.clear();
     // Volta para a tela de login
-    window.location.href = '../index.html';
+    window.location.href = '../../index.html';
 }
 
 export function getCurrentUser() {
@@ -29,7 +29,7 @@ export function getCurrentUser() {
 
 export function checkAuth() {
     if (!getCurrentUser()) {
-        window.location.href = '../index.html';
+        window.location.href = '../../index.html';
         return false;
     }
     return true;
