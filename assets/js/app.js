@@ -64,7 +64,10 @@ function updateUIForRole(user) {
     
     if (userAvatarDisplay) {
         // Usa a foto do Google (photoUrl) ou um placeholder se não tiver
-        userAvatarDisplay.src = user.photoUrl || `https://placehold.co/100x100/a3e635/1f2937?text=${user.name ? user.name.charAt(0).toUpperCase() : 'U'}`;
+        // Prioriza a foto salva no perfil (photoUrl)
+        const photoSrc = user.photoUrl || `https://placehold.co/100x100/a3e635/1f2937?text=${user.name ? user.name.charAt(0).toUpperCase() : 'U'}`;
+        userAvatarDisplay.src = photoSrc;
+        
         // Adiciona um listener de erro caso a imagem do Google quebre, voltando pro placeholder
         userAvatarDisplay.onerror = function() {
             this.src = `https://placehold.co/100x100/a3e635/1f2937?text=${user.name ? user.name.charAt(0).toUpperCase() : 'U'}`;
@@ -75,7 +78,7 @@ function updateUIForRole(user) {
         // Mostra "Nome (Cargo)"
         const displayRole = roleMap[user.role] || 'Membro';
         // Pega só o primeiro e último nome para não ficar gigante na sidebar
-        const names = user.name.split(' ');
+        const names = user.name ? user.name.split(' ') : ['Usuário'];
         const shortName = names.length > 1 ? `${names[0]} ${names[names.length - 1]}` : names[0];
         userNameDisplay.textContent = `${shortName} (${displayRole})`;
     }
